@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="is">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Verkefni — NTV Promennt</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --red: #C0392B; --red-light: #fdf2f1; --red-mid: #f5c6c2;
+  --dark: #1a1a2e; --text: #1a1a2e;
+  --muted: #7f8c9a; --border: #e8ecef; --bg: #f7f8fa; --white: #ffffff;
+  --green: #27ae60; --green-light: #eafaf1;
+  --amber: #f39c12; --blue: #2980b9; --blue-light: #eaf4fb;
+}
+body { font-family: "DM Sans", sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+header {
+  background: var(--dark); padding: 0 1.5rem;
+  display: flex; align-items: center; height: 56px;
+  position: sticky; top: 0; z-index: 100;
+}
+.logo { display: flex; align-items: center; gap: 8px; }
+.logo-badge { background: var(--red); color: white; font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 4px; }
+.logo-text { color: rgba(255,255,255,0.85); font-size: 14px; font-weight: 500; }
+
+.breadcrumb {
+  background: var(--white); border-bottom: 1px solid var(--border);
+  padding: 0 1.5rem; display: flex; align-items: center; gap: 6px;
+  height: 44px; font-size: 13px;
+}
+.bc-item { color: var(--muted); cursor: pointer; }
+.bc-item:hover { color: var(--red); }
+.bc-item.active { color: var(--text); font-weight: 500; cursor: default; }
+.bc-sep { color: var(--border); font-size: 16px; }
+
+.layout { display: flex; height: calc(100vh - 100px); }
+
+.sidebar {
+  width: 260px; min-width: 260px; background: var(--white);
+  border-right: 1px solid var(--border); overflow-y: auto;
+  display: flex; flex-direction: column;
+}
+.sidebar-section { padding: 1rem; border-bottom: 1px solid var(--border); }
+.sidebar-label { font-size: 10px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+.sidebar-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 10px; border-radius: 8px; cursor: pointer; margin-bottom: 2px;
+}
+.sidebar-item:hover { background: var(--bg); }
+.sidebar-item.active { background: var(--red-light); }
+.sidebar-item-name { font-size: 13px; font-weight: 500; }
+.sidebar-item.active .sidebar-item-name { color: var(--red); }
+.sidebar-item-count { font-size: 11px; font-family: "DM Mono", monospace; color: var(--muted); background: var(--bg); padding: 1px 6px; border-radius: 8px; }
+.btn-add-small {
+  width: 100%; background: none; border: 1px dashed var(--border);
+  border-radius: 8px; padding: 7px; font-size: 12px; color: var(--muted);
+  cursor: pointer; font-family: "DM Sans", sans-serif; margin-top: 4px;
+}
+.btn-add-small:hover { border-color: var(--red); color: var(--red); }
+
+.content { flex: 1; overflow-y: auto; padding: 1.5rem; }
+
+/* COVER BANNER */
+.cover-banner {
+  width: 100%; height: 180px; border-radius: 12px; margin-bottom: 1.5rem;
+  overflow: hidden; position: relative; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  border: 1.5px dashed var(--border); background: var(--bg);
+}
+.cover-banner.has-cover { cursor: default; border-style: solid; }
+.cover-banner:not(.has-cover):hover { border-color: var(--red); }
+.cover-banner img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.cover-placeholder { display: flex; flex-direction: column; align-items: center; gap: 6px; color: var(--muted); text-align: center; position: relative; }
+.cover-placeholder-icon { font-size: 32px; }
+.cover-placeholder-text { font-size: 12px; }
+.cover-actions {
+  position: absolute; bottom: 10px; right: 10px;
+  display: flex; gap: 6px; align-items: center; z-index: 2;
+}
+.cover-btn {
+  background: rgba(255,255,255,0.93); border: 1px solid var(--border);
+  border-radius: 6px; padding: 4px 10px; font-size: 11px;
+  font-family: "DM Sans", sans-serif; cursor: pointer; font-weight: 500;
+}
+.cover-btn:hover { background: white; }
+.cover-btn.red { color: var(--red); border-color: var(--red-mid); }
+.color-wrap {
+  display: flex; align-items: center; gap: 5px;
+  background: rgba(255,255,255,0.93); border: 1px solid var(--border);
+  border-radius: 6px; padding: 3px 8px;
+}
+.color-wrap input[type=color] { width: 18px; height: 18px; border: none; padding: 0; background: none; cursor: pointer; border-radius: 3px; }
+.color-wrap input[type=text] { width: 64px; border: none; font-size: 11px; font-family: "DM Mono", monospace; background: none; outline: none; color: var(--text); }
+#cover-file { display: none; }
+
+/* PROJECT */
+.project-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 1.5rem; }
+.project-title { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
+.project-meta { font-size: 13px; color: var(--muted); }
+.btn-primary { background: var(--red); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-family: "DM Sans", sans-serif; font-weight: 500; cursor: pointer; }
+.btn-primary:hover { opacity: 0.85; }
+
+.users-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; margin-bottom: 1.5rem; }
+.user-card { background: var(--white); border: 1px solid var(--border); border-radius: 12px; padding: 16px; cursor: pointer; }
+.user-card:hover { border-color: var(--red); transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+.user-avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 600; margin-bottom: 10px; }
+.user-name { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+.user-stats { font-size: 12px; color: var(--muted); }
+
+.objective-block { background: var(--white); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 12px; overflow: hidden; }
+.objective-header { padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
+.objective-header:hover { background: var(--bg); }
+.objective-left { display: flex; align-items: center; gap: 10px; }
+.obj-chevron { font-size: 11px; color: var(--muted); transition: transform 0.2s; display: inline-block; }
+.obj-chevron.open { transform: rotate(90deg); }
+.objective-name { font-size: 14px; font-weight: 600; }
+.objective-right { display: flex; align-items: center; gap: 8px; }
+.obj-progress { font-size: 11px; font-family: "DM Mono", monospace; color: var(--muted); background: var(--bg); padding: 2px 8px; border-radius: 8px; }
+.obj-edit-btn { background: none; border: none; color: var(--muted); font-size: 13px; cursor: pointer; padding: 2px 8px; border-radius: 4px; }
+.obj-edit-btn:hover { background: var(--bg); color: var(--text); }
+.obj-tasks { border-top: 1px solid var(--border); }
+.task-row { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-bottom: 1px solid var(--border); cursor: pointer; }
+.task-row:last-child { border-bottom: none; }
+.task-row:hover { background: var(--bg); }
+.task-check { width: 16px; height: 16px; border-radius: 4px; border: 1.5px solid var(--border); display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; }
+.task-check.done { background: var(--green); border-color: var(--green); }
+.task-check.done::after { content: "✓"; color: white; font-size: 10px; }
+.task-check.progress { background: var(--blue); border-color: var(--blue); }
+.task-check.progress::after { content: "●"; color: white; font-size: 8px; }
+.task-name { flex: 1; font-size: 13px; font-weight: 500; }
+.task-name.strikethrough { text-decoration: line-through; color: var(--muted); }
+.task-badges { display: flex; align-items: center; gap: 6px; }
+.badge { font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 4px; font-family: "DM Mono", monospace; }
+.badge-high { background: #fdf2f1; color: #C0392B; }
+.badge-mid { background: #fef9ec; color: #f39c12; }
+.badge-low { background: #f0f7ee; color: #27ae60; }
+.due { font-size: 11px; color: var(--muted); font-family: "DM Mono", monospace; }
+.due.overdue { color: var(--red); font-weight: 500; }
+.add-task-row { padding: 10px 16px; font-size: 12px; color: var(--muted); cursor: pointer; border-top: 1px dashed var(--border); }
+.add-task-row:hover { color: var(--red); }
+.empty { text-align: center; padding: 3rem 1rem; color: var(--muted); }
+.empty-icon { font-size: 36px; margin-bottom: 12px; }
+.av-0 { background: #eaf4fb; color: #2980b9; }
+.av-1 { background: #fef0ea; color: #C0392B; }
+.av-2 { background: #eafaf1; color: #27ae60; }
+.av-3 { background: #fef9ec; color: #f39c12; }
+.av-4 { background: #f0eefa; color: #8e44ad; }
+
+/* MODAL */
+.overlay { display: none; position: fixed; inset: 0; background: rgba(26,26,46,0.5); z-index: 300; align-items: center; justify-content: center; padding: 1rem; }
+.overlay.open { display: flex; }
+.modal { background: var(--white); border-radius: 14px; width: 100%; max-width: 460px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+.modal-header { padding: 18px 20px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.modal-title { font-size: 15px; font-weight: 600; }
+.modal-x { background: none; border: none; color: var(--muted); font-size: 20px; cursor: pointer; }
+.modal-body { padding: 18px 20px; display: flex; flex-direction: column; gap: 14px; }
+.modal-footer { padding: 14px 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; align-items: center; }
+.fg { display: flex; flex-direction: column; gap: 5px; }
+.fl { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+.fi, .fs, .ft { border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; font-size: 13px; font-family: "DM Sans", sans-serif; color: var(--text); background: var(--white); outline: none; }
+.fi:focus, .fs:focus, .ft:focus { border-color: var(--red); }
+.ft { resize: vertical; min-height: 70px; }
+.fr { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.btn-cancel { background: none; border: 1px solid var(--border); color: var(--muted); padding: 7px 14px; border-radius: 8px; font-size: 13px; font-family: "DM Sans", sans-serif; cursor: pointer; }
+.btn-cancel:hover { border-color: var(--text); color: var(--text); }
+.btn-del { background: none; border: 1px solid var(--red-mid); color: var(--red); padding: 7px 14px; border-radius: 8px; font-size: 13px; font-family: "DM Sans", sans-serif; cursor: pointer; margin-right: auto; }
+.btn-del:hover { background: var(--red-light); }
+
+/* TASK DETAIL MODAL */
+.modal-lg { max-width: 680px; max-height: 85vh; display: flex; flex-direction: column; }
+.modal-tabs { display: flex; border-bottom: 1px solid var(--border); padding: 0 20px; }
+.modal-tab { padding: 10px 16px; font-size: 13px; font-weight: 500; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.modal-tab.active { color: var(--red); border-bottom-color: var(--red); }
+.modal-tab-panels { flex: 1; overflow-y: auto; padding: 18px 20px; }
+.modal-panel { display: none; flex-direction: column; gap: 14px; }
+.modal-panel.active { display: flex; }
+.todo-list { display: flex; flex-direction: column; gap: 6px; }
+.todo-item { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: var(--bg); border-radius: 8px; }
+.todo-check { width: 16px; height: 16px; border-radius: 4px; border: 1.5px solid var(--border); flex-shrink: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.todo-check.checked { background: var(--green); border-color: var(--green); }
+.todo-check.checked::after { content: "✓"; color: white; font-size: 10px; }
+.todo-text { flex: 1; font-size: 13px; }
+.todo-del { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 16px; padding: 0 4px; }
+.todo-del:hover { color: var(--red); }
+.todo-add { display: flex; gap: 8px; margin-top: 4px; }
+.todo-add input { flex: 1; }
+.files-list { display: flex; flex-direction: column; gap: 6px; }
+.file-item { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: var(--bg); border-radius: 8px; }
+.file-icon { font-size: 18px; flex-shrink: 0; }
+.file-name { flex: 1; font-size: 13px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.file-size { font-size: 11px; color: var(--muted); font-family: "DM Mono", monospace; }
+.file-del { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 16px; padding: 0 4px; }
+.file-del:hover { color: var(--red); }
+.file-upload-btn { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; border: 1.5px dashed var(--border); border-radius: 8px; cursor: pointer; color: var(--muted); font-size: 13px; }
+.file-upload-btn:hover { border-color: var(--red); color: var(--red); }
+#task-file-input { display: none; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo"><?xml version="1.0" encoding="UTF-8"?><svg style="height:30px;width:auto;" id="Layer_1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 106.89 77.55"><path d="M2.77,17.23h17.23s-.02,3.88-.02,5.48c.65-.5,1.14-.88,1.63-1.27,1.53-1.21,3.04-2.42,4.58-3.62.26-.2.61-.59.91-.59,2.18,0,4.43,0,6.55,0,2.94.28,5.22,3.12,5.23,6.09.04,8.53.02,17.06.03,25.59,0,1.6.29,1.89,1.92,1.89.71,0,1.43,0,2.21,0v12.18h-17.1c0-.37,0-21.26,0-31.34,0-1.66-.37-2.03-2.01-2.03-.77,0-1.55,0-2.32,0-1.2,0-1.63.44-1.63,1.65,0,5.89,0,31.73,0,31.73H6.99v-31.27c0-1.83-.27-2.1-2.14-2.1-.69,0-1.39,0-2.08,0v-12.4Z" fill="#fff" fill-rule="evenodd"/><path d="M103.94,29.62c-.77,0-1.55-.02-2.32,0-1,.01-1.68.56-1.84,1.53-1.02,5.98-5.49,31.84-5.49,31.84h-17.84s-5.03-29.48-5.43-31.76c-.2-1.12-.81-1.6-1.93-1.61-.69,0-1.38,0-2.13,0-.03-.25,0-12.39,0-12.39h14.71s2.42,17.56,3.62,26.24c.07,0,.14,0,.21,0,1.2-8.67,2.41-17.48,3.63-26.24.35,0,14.49.02,14.81,0v12.4Z" fill="#fff" fill-rule="evenodd"/><path d="M59.46,2.42c0,4.26.02,8.53.03,12.79,0,1.62.34,2.01,1.98,2.01h2.2v12.21s-1.72,0-2.57,0c-1.16,0-1.61.45-1.61,1.68,0,3.31,0,15.25,0,17.91,0,1.38.4,1.79,1.75,1.8.64,0,2.45,0,2.45,0l.02,12.16h-17.18s0-21.29,0-31.47c0-1.56-.35-1.9-1.94-1.91-.71,0-1.43,0-2.19,0v-12.39c.84,0,1.69,0,2.53,0,1.17-.01,1.6-.29,1.6-1.45,0-4.45-.02-8.9-.03-13.35h12.96Z" fill="#fff" fill-rule="evenodd"/><path d="M11.91,68.94c.27,0,.52.05.76.15.24.1.44.23.62.4.18.17.32.37.42.6.1.23.15.47.15.74s-.05.51-.15.74c-.1.23-.24.43-.42.6-.18.17-.38.31-.62.4-.24.1-.49.15-.76.15H3.96v1.73c0,.19-.07.35-.21.48-.14.13-.3.2-.48.2-.19,0-.36-.07-.49-.2-.13-.13-.2-.29-.2-.48v-4.82c0-.19.07-.35.2-.48.13-.13.3-.2.49-.2h8.64ZM3.96,70.3v1.05h8.01c.14,0,.27-.05.38-.15.11-.1.17-.22.17-.38,0-.14-.06-.26-.17-.37-.11-.1-.24-.16-.38-.16H3.96Z" fill="#fff"/><path d="M25.37,73.23c.27.18.54.39.82.6.11.08.2.16.27.26.08.1.12.22.12.35,0,.19-.07.35-.2.48-.13.13-.3.2-.49.2-.16,0-.33-.07-.49-.2-.39-.28-.8-.56-1.21-.82-.41-.26-.84-.5-1.29-.71-.45-.21-.91-.37-1.39-.5-.48-.12-.98-.18-1.5-.18h-2.87c-.13.02-.23.08-.32.17-.09.09-.13.21-.13.35v1.21c0,.19-.07.35-.21.48-.14.13-.3.2-.48.2-.19,0-.36-.07-.49-.2-.13-.13-.2-.29-.2-.48v-1.36c0-.24.05-.46.14-.67.09-.21.21-.4.37-.55.15-.16.34-.28.55-.37.21-.09.44-.13.69-.13h7.64c.14,0,.27-.05.38-.15.11-.1.17-.22.17-.38,0-.14-.06-.26-.17-.37-.11-.1-.24-.16-.38-.16h-8.7c-.19,0-.36-.07-.49-.2-.13-.13-.2-.29-.2-.48s.07-.35.2-.48c.13-.13.3-.2.49-.2h8.64c.27,0,.52.05.76.15.24.1.44.23.62.4.18.17.32.37.42.6.1.23.15.47.15.74s-.05.51-.15.74c-.1.23-.24.43-.42.6-.18.17-.38.31-.62.4-.24.1-.49.15-.76.15h-.06c.26.16.52.33.79.52" fill="#fff"/><path d="M39.76,72.03c0,.36-.06.72-.18,1.09-.12.36-.3.69-.53.99-.23.3-.51.54-.84.73-.33.19-.7.28-1.11.28h-6.58c-.39-.02-.75-.13-1.05-.32-.31-.19-.57-.44-.79-.73-.22-.29-.38-.62-.5-.98s-.17-.71-.17-1.06.06-.72.18-1.08c.12-.36.3-.7.53-.99.23-.3.51-.54.84-.73.33-.19.7-.28,1.11-.28h6.58c.39.02.75.13,1.05.32.31.19.57.44.79.73.22.29.38.62.5.98.12.36.17.71.17,1.06M37.61,73.59c.21-.12.38-.26.5-.43.12-.17.2-.36.25-.56.04-.2.07-.39.07-.56s-.02-.36-.07-.56c-.04-.2-.12-.39-.25-.56-.12-.17-.29-.31-.5-.43-.21-.12-.48-.18-.81-.18h-5.83c-.34,0-.61.06-.81.18-.21.12-.37.26-.49.43-.12.17-.2.36-.25.56-.04.2-.06.39-.06.56s.02.36.06.56c.04.2.12.39.25.56.12.17.28.31.49.43.21.12.48.18.81.18h5.83c.33,0,.6-.06.81-.18" fill="#fff"/><path d="M53.38,74.45c0,.19-.07.35-.2.48-.13.13-.3.2-.49.2s-.36-.07-.49-.2c-.13-.13-.2-.29-.2-.48v-3.09c0-.39-.02-.58-.07-.58-.04,0-.17.13-.4.38l-3.17,3.55c-.13.14-.28.25-.46.32-.18.07-.38.11-.59.11s-.41-.04-.59-.11c-.18-.07-.34-.18-.46-.32l-3.17-3.55c-.22-.26-.36-.38-.4-.38s-.07.19-.07.58v3.09c0,.19-.07.35-.2.48-.13.13-.3.2-.49.2s-.36-.07-.49-.2c-.13-.13-.2-.29-.2-.48v-4.14c0-.38.11-.7.33-.96.22-.26.52-.4.91-.4.23,0,.44.06.62.17.18.11.35.25.5.41l3.32,3.72s.11.1.18.15c.07.05.15.08.22.08s.15-.03.22-.08c.07-.05.13-.1.18-.15l3.3-3.72h.01c.13-.18.3-.32.49-.43.19-.1.4-.16.63-.16.38,0,.69.13.91.4.22.26.33.59.33.96v4.14Z" fill="#fff"/><path d="M54.82,69.62c0-.19.07-.35.2-.48.13-.13.3-.2.49-.2h10.23c.19,0,.36.07.49.2.13.13.2.29.2.48s-.07.35-.2.48c-.13.13-.3.2-.49.2h-10.23c-.19,0-.36-.07-.49-.2-.13-.13-.2-.29-.2-.48" fill="#fff"/><path d="M56.58,75.13c-.21,0-.42-.04-.63-.13-.21-.09-.4-.21-.56-.38-.16-.16-.3-.35-.4-.58-.11-.23-.16-.48-.16-.77v-1.28c0-.26.07-.43.22-.51.15-.08.38-.13.7-.13h9.68c.19,0,.36.07.49.2.13.13.2.29.2.48s-.07.35-.2.48c-.13.13-.3.2-.49.2h-9.22v.69c0,.09.04.18.12.25.08.07.19.11.32.11h9.09c.19,0,.36.07.49.2.13.13.2.29.2.48s-.07.35-.2.48c-.13.13-.3.2-.49.2h-9.16Z" fill="#fff"/><path d="M77.9,69.14c.13-.13.3-.2.49-.2s.36.07.49.2c.13.13.2.29.2.48v4.13c0,.39-.13.71-.4.98-.26.26-.59.4-.99.4-.13,0-.27-.02-.4-.06-.13-.04-.25-.09-.35-.16l-6.61-3.97c-.18-.1-.33-.19-.45-.25-.12-.06-.22-.09-.3-.09-.14,0-.24.09-.27.27-.04.18-.06.44-.06.78v2.79c0,.19-.07.35-.2.48-.13.13-.3.2-.49.2s-.36-.07-.49-.2c-.13-.13-.2-.29-.2-.48v-4.13c0-.39.13-.71.4-.98.26-.26.59-.4.99-.4.13,0,.27.02.4.06.13.04.25.09.35.16l6.61,3.97c.18.1.33.19.45.25.12.06.22.09.3.09.14,0,.24-.09.27-.27.04-.18.06-.44.06-.78v-2.79c0-.19.07-.35.2-.48" fill="#fff"/><path d="M90.55,69.14c.13-.13.3-.2.49-.2s.36.07.49.2c.13.13.2.29.2.48v4.13c0,.39-.13.71-.4.98-.26.26-.59.4-.99.4-.13,0-.27-.02-.4-.06-.13-.04-.25-.09-.35-.16l-6.61-3.97c-.18-.1-.33-.19-.45-.25-.12-.06-.22-.09-.3-.09-.14,0-.24.09-.27.27-.04.18-.06.44-.06.78v2.79c0,.19-.07.35-.2.48-.13.13-.3.2-.49.2s-.36-.07-.49-.2c-.13-.13-.2-.29-.2-.48v-4.13c0-.39.13-.71.4-.98.26-.26.59-.4.99-.4.13,0,.27.02.4.06.13.04.25.09.35.16l6.61,3.97c.18.1.33.19.45.25.12.06.22.09.3.09.14,0,.24-.09.27-.27.04-.18.06-.44.06-.78v-2.79c0-.19.07-.35.2-.48" fill="#fff"/><path d="M104.11,69.14c.13.13.2.29.2.48s-.07.35-.2.48c-.13.13-.3.2-.49.2h-4.27v4.14c0,.19-.07.35-.2.48-.13.13-.3.2-.49.2s-.36-.07-.49-.2c-.13-.13-.2-.29-.2-.48v-4.14h-4.33c-.17-.02-.32-.09-.45-.22-.12-.13-.19-.28-.19-.46,0-.19.07-.35.2-.48.13-.13.3-.2.49-.2h9.92c.19,0,.36.07.49.2" fill="#fff"/></svg></div>
+</header>
+
+<div class="breadcrumb" id="bc"></div>
+
+<div class="layout">
+  <div class="sidebar" id="sb"></div>
+  <div class="content" id="ct"></div>
+</div>
+
+<input type="file" id="cover-file" accept="image/*">
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="m-title"></div>
+      <button class="modal-x" onclick="closeModal()">x</button>
+    </div>
+    <div class="modal-body" id="m-body"></div>
+    <div class="modal-footer" id="m-foot"></div>
+  </div>
+</div>
+
+<script>
+const KEY = "ntv_pm3";
+
+let db = { projects: [{
+  id: 1, name: "Gervigreind í dag", desc: "Facebook hópur um gervigreind",
+  users: [
+    { id: "u1", name: "Darri", color: 0 },
+    { id: "u2", name: "Óli", color: 1 }
+  ],
+  objectives: [
+    { id: "o1", name: "Content", userId: "u2", open: true, tasks: [
+      { id: "t1", name: "Claude content — föst dagskrá", priority: "high", due: "2025-05-31", status: "progress" },
+      { id: "t2", name: "Velkominn póst", priority: "high", due: "2025-05-06", status: "done" }
+    ]},
+    { id: "o2", name: "Auglýsingar", userId: "u1", open: true, tasks: [
+      { id: "t3", name: "Meta re-target auglýsing", priority: "high", due: "2025-05-10", status: "progress" },
+      { id: "t4", name: "Facebook post / story", priority: "mid", due: "2025-05-08", status: "todo" }
+    ]},
+    { id: "o3", name: "Kynning", userId: "u2", open: true, tasks: [
+      { id: "t5", name: "Útvarpsviðtal", priority: "mid", due: "2025-05-15", status: "todo" },
+      { id: "t6", name: "Póstar á FB, IG, TikTok", priority: "high", due: "2025-05-07", status: "todo" }
+    ]}
+  ]
+}]};
+
+let state = { pid: 1, uid: null };
+
+function load() { try { const s = localStorage.getItem(KEY); if (s) db = JSON.parse(s); } catch(e){} }
+function save() { localStorage.setItem(KEY, JSON.stringify(db)); }
+function proj() { return db.projects.find(p => p.id === state.pid); }
+function usr() { return state.uid ? proj().users.find(u => u.id === state.uid) : null; }
+function ini(n) { return n.split(" ").map(w => w[0]).join("").slice(0,2).toUpperCase(); }
+function avCls(c) { return "av-" + (c % 5); }
+function isOD(d, s) { return d && s !== "done" && new Date(d) < new Date(); }
+function fmtD(d) { if (!d) return ""; const [y,m,day] = d.split("-"); return day+"."+m+"."+y; }
+function priB(p) {
+  const m = { high: ["badge-high","Hár"], mid: ["badge-mid","Miðlungs"], low: ["badge-low","Lágur"] };
+  const [c,l] = m[p] || m.mid;
+  return '<span class="badge ' + c + '">' + l + "</span>";
+}
+function objsFor(uid) { return proj().objectives.filter(o => o.userId === uid); }
+
+// ── COVER ──────────────────────────────────────────────────────
+function getCoverImg() { return localStorage.getItem("ntv_cover_img") || ""; }
+function getCoverColor() { return localStorage.getItem("ntv_cover_color") || ""; }
+
+function renderCover() {
+  const img = getCoverImg();
+  const col = getCoverColor();
+  const hasCover = img || col;
+  const ban = document.getElementById("cover-ban");
+  if (!ban) return;
+
+  let style = "";
+  if (img) { style = "border-style:solid;border-color:var(--border)"; }
+  else if (col) { style = "background:" + col + ";border-style:solid;border-color:transparent"; }
+
+  ban.className = "cover-banner" + (hasCover ? " has-cover" : "");
+  ban.setAttribute("style", style);
+  ban.onclick = hasCover ? null : function() { document.getElementById("cover-file").click(); };
+
+  const imgEl = ban.querySelector("img");
+  if (img) {
+    if (!imgEl) { const i = document.createElement("img"); ban.insertBefore(i, ban.firstChild); ban.querySelector("img").src = img; }
+    else { imgEl.src = img; }
+  } else {
+    if (imgEl) imgEl.remove();
+  }
+
+  const ph = ban.querySelector(".cover-placeholder");
+  if (ph) ph.style.display = hasCover ? "none" : "flex";
+
+  // sync color inputs
+  const colorVal = col || "#1a1a2e";
+  const ci = ban.querySelector("input[type=color]");
+  const ti = ban.querySelector("input[type=text]");
+  if (ci) ci.value = colorVal;
+  if (ti) ti.value = colorVal;
+
+  // remove btn
+  const rb = ban.querySelector(".cover-btn.red");
+  if (rb) rb.style.display = hasCover ? "inline-block" : "none";
+}
+
+function setCoverColor(hex) {
+  if (!hex.match(/^#[0-9a-fA-F]{6}$/)) return;
+  localStorage.setItem("ntv_cover_color", hex);
+  localStorage.removeItem("ntv_cover_img");
+  renderCover();
+}
+
+function removeCover() {
+  localStorage.removeItem("ntv_cover_img");
+  localStorage.removeItem("ntv_cover_color");
+  document.getElementById("cover-file").value = "";
+  renderCover();
+}
+
+document.getElementById("cover-file").addEventListener("change", function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    localStorage.setItem("ntv_cover_img", ev.target.result);
+    localStorage.removeItem("ntv_cover_color");
+    renderCover();
+  };
+  reader.readAsDataURL(file);
+});
+
+// ── SIDEBAR ────────────────────────────────────────────────────
+function renderSB() {
+  const p = proj();
+  let h = '<div class="sidebar-section"><div class="sidebar-label">Verkefni</div>';
+  db.projects.forEach(function(pr) {
+    h += '<div class="sidebar-item' + (pr.id === state.pid ? " active" : "") + '" onclick="selP(' + pr.id + ')">'
+      + '<span class="sidebar-item-name">' + pr.name + '</span>'
+      + '<span class="sidebar-item-count">' + pr.objectives.length + '</span></div>';
+  });
+  h += '<button class="btn-add-small" onclick="mAddProject()">+ Nýtt verkefni</button></div>';
+  if (p) {
+    h += '<div class="sidebar-section"><div class="sidebar-label">Notendur</div>';
+    p.users.forEach(function(u) {
+      h += '<div class="sidebar-item' + (state.uid === u.id ? " active" : "") + '" onclick="selU(\'' + u.id + '\')">'
+        + '<span class="sidebar-item-name">' + u.name + '</span>'
+        + '<span class="sidebar-item-count">' + objsFor(u.id).length + '</span></div>';
+    });
+    h += '<div class="sidebar-item' + (!state.uid ? " active" : "") + '" onclick="selU(null)">'
+      + '<span class="sidebar-item-name" style="color:var(--muted)">Allir</span></div>';
+    h += '<button class="btn-add-small" onclick="mAddUser()">+ Nýr notandi</button></div>';
+  }
+  document.getElementById("sb").innerHTML = h;
+}
+
+// ── BREADCRUMB ─────────────────────────────────────────────────
+function renderBC() {
+  const p = proj(); const u = usr();
+  let h = '<span class="bc-item' + (!p ? " active" : "") + '" onclick="selP(' + state.pid + ')">Verkefni</span>';
+  if (p) h += '<span class="bc-sep">›</span><span class="bc-item' + (!u ? " active" : "") + '" onclick="selU(null)">' + p.name + '</span>';
+  if (u) h += '<span class="bc-sep">›</span><span class="bc-item active">' + u.name + '</span>';
+  document.getElementById("bc").innerHTML = h;
+}
+
+// ── CONTENT ────────────────────────────────────────────────────
+function renderCT() {
+  const p = proj();
+  const ct = document.getElementById("ct");
+  if (!p) { ct.innerHTML = '<div class="empty"><div class="empty-icon">📁</div><div>Veldu verkefni</div></div>'; return; }
+
+  const u = usr();
+  const objs = u ? objsFor(u.id) : p.objectives;
+  const title = u ? u.name : p.name;
+  const sub = u ? p.name : (p.users.length + " notendur · " + p.objectives.length + " objectives");
+
+  const col = getCoverColor() || "#1a1a2e";
+
+  let h = '<div class="cover-banner" id="cover-ban">'
+    + '<div class="cover-placeholder" style="display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--muted)">'
+    + '<div style="font-size:32px">🖼</div><div style="font-size:12px">Smelltu til að hlaða upp mynd eða veldu lit</div></div>'
+    + '<div class="cover-actions">'
+    + '<div class="color-wrap" onclick="event.stopPropagation()">'
+    + '<input type="color" value="' + col + '" oninput="setCoverColor(this.value)" onchange="setCoverColor(this.value)">'
+    + '<input type="text" value="' + col + '" maxlength="7" placeholder="#000000" oninput="handleHex(this.value)" style="width:64px">'
+    + '</div>'
+    + '<button class="cover-btn" onclick="event.stopPropagation();document.getElementById(\'cover-file\').click()">Hlaða upp mynd</button>'
+    + '<button class="cover-btn red" onclick="event.stopPropagation();removeCover()" style="display:none">Fjarlægja</button>'
+    + '</div></div>';
+
+  h += '<div class="project-header"><div>'
+    + '<div class="project-title">' + title + '</div>'
+    + '<div class="project-meta">' + sub + '</div></div>'
+    + '<div style="display:flex;gap:8px">'
+    + (!u ? '<button class="btn-primary" onclick="mAddUser()">+ Notandi</button>' : "")
+    + '<button class="btn-primary" onclick="mAddObj(\'' + (u ? u.id : "") + '\')">+ Objective</button>'
+    + '</div></div>';
+
+  if (!u) {
+    h += '<div class="users-grid">';
+    p.users.forEach(function(uu) {
+      const uobjs = objsFor(uu.id);
+      const tasks = uobjs.flatMap(function(o) { return o.tasks; });
+      const done = tasks.filter(function(t) { return t.status === "done"; }).length;
+      h += '<div class="user-card" onclick="selU(\'' + uu.id + '\')">'
+        + '<div class="user-avatar ' + avCls(uu.color) + '">' + ini(uu.name) + '</div>'
+        + '<div class="user-name">' + uu.name + '</div>'
+        + '<div class="user-stats">' + uobjs.length + " objectives · " + done + "/" + tasks.length + " verkþættir</div></div>";
+    });
+    h += "</div>";
+  }
+
+  if (objs.length === 0) {
+    h += '<div class="empty"><div class="empty-icon">🎯</div><div>Engin objectives enn</div></div>';
+  } else {
+    objs.forEach(function(obj) { h += renderObj(obj); });
+  }
+
+  ct.innerHTML = h;
+  renderCover();
+}
+
+function renderObj(obj) {
+  const p = proj();
+  const u = p.users.find(function(u) { return u.id === obj.userId; });
+  const done = obj.tasks.filter(function(t) { return t.status === "done"; }).length;
+  let h = '<div class="objective-block"><div class="objective-header" onclick="toggleObj(\'' + obj.id + '\')">'
+    + '<div class="objective-left">'
+    + '<span class="obj-chevron' + (obj.open ? " open" : "") + '">▶</span>'
+    + '<span class="objective-name">' + obj.name + '</span>'
+    + (u ? '<div class="user-avatar ' + avCls(u.color) + '" style="width:22px;height:22px;font-size:10px;margin:0">' + ini(u.name) + '</div>' : "")
+    + '</div><div class="objective-right">'
+    + '<span class="obj-progress">' + done + "/" + obj.tasks.length + '</span>'
+    + '<button class="obj-edit-btn" onclick="event.stopPropagation();mEditObj(\'' + obj.id + '\')">···</button>'
+    + '</div></div>';
+  if (obj.open) {
+    h += '<div class="obj-tasks">';
+    obj.tasks.forEach(function(t) { h += renderTask(t, obj.id); });
+    h += '<div class="add-task-row" onclick="mAddTask(\'' + obj.id + '\')">+ Bæta við verkþætti</div>';
+    h += '</div>';
+  }
+  h += '</div>';
+  return h;
+}
+
+function renderTask(t, objId) {
+  const od = isOD(t.due, t.status);
+  return '<div class="task-row" onclick="mEditTask(\'' + objId + '\',\'' + t.id + '\')">'
+    + '<div class="task-check ' + t.status + '" onclick="event.stopPropagation();cycleS(\'' + objId + '\',\'' + t.id + '\')"></div>'
+    + '<span class="task-name' + (t.status === "done" ? " strikethrough" : "") + '">' + t.name + '</span>'
+    + '<div class="task-badges">' + priB(t.priority)
+    + (t.due ? '<span class="due' + (od ? " overdue" : "") + '">' + fmtD(t.due) + '</span>' : "")
+    + '</div></div>';
+}
+
+// ── ACTIONS ────────────────────────────────────────────────────
+function selP(id) { state.pid = id; state.uid = null; render(); }
+function selU(id) { state.uid = id; render(); }
+function toggleObj(id) { const o = proj().objectives.find(function(o) { return o.id === id; }); if(o) o.open = !o.open; save(); renderCT(); }
+function cycleS(oid, tid) {
+  const o = proj().objectives.find(function(o) { return o.id === oid; });
+  const t = o.tasks.find(function(t) { return t.id === tid; });
+  const c = { todo: "progress", progress: "done", done: "todo" };
+  t.status = c[t.status] || "todo";
+  save(); renderCT();
+}
+function handleHex(v) { if (v.match(/^#[0-9a-fA-F]{6}$/)) setCoverColor(v); }
+
+// ── MODAL ──────────────────────────────────────────────────────
+function openModal(title, body, foot) {
+  document.getElementById("m-title").textContent = title;
+  document.getElementById("m-body").innerHTML = body;
+  document.getElementById("m-foot").innerHTML = foot;
+  document.getElementById("overlay").classList.add("open");
+}
+function closeModal() { document.getElementById("overlay").classList.remove("open"); document.querySelector(".modal").classList.remove("modal-lg"); }
+document.getElementById("overlay").addEventListener("click", function(e) { if (e.target === this) closeModal(); });
+
+function gv(id) { return document.getElementById(id).value.trim(); }
+
+function mAddProject() {
+  openModal("Nýtt verkefni",
+    '<div class="fg"><label class="fl">Heiti</label><input class="fi" id="f1" placeholder="Nafn verkefnis"></div>'
+    + '<div class="fg"><label class="fl">Lýsing</label><textarea class="ft" id="f2" placeholder="Stutt lýsing..."></textarea></div>',
+    '<button class="btn-cancel" onclick="closeModal()">Hætta við</button>'
+    + '<button class="btn-primary" onclick="saveProject()">Vista</button>');
+}
+function saveProject() {
+  const n = gv("f1"); if (!n) return;
+  db.projects.push({ id: Date.now(), name: n, desc: gv("f2"), users: [], objectives: [] });
+  save(); closeModal(); render();
+}
+
+function mAddUser() {
+  openModal("Nýr notandi",
+    '<div class="fg"><label class="fl">Nafn</label><input class="fi" id="f1" placeholder="Fullt nafn"></div>',
+    '<button class="btn-cancel" onclick="closeModal()">Hætta við</button>'
+    + '<button class="btn-primary" onclick="saveUser()">Vista</button>');
+}
+function saveUser() {
+  const n = gv("f1"); if (!n) return;
+  const p = proj();
+  p.users.push({ id: "u" + Date.now(), name: n, color: p.users.length });
+  save(); closeModal(); render();
+}
+
+function mAddObj(uid) {
+  const p = proj();
+  const opts = p.users.map(function(u) { return '<option value="' + u.id + '"' + (u.id === uid ? " selected" : "") + '>' + u.name + '</option>'; }).join("");
+  openModal("Nýtt objective",
+    '<div class="fg"><label class="fl">Heiti</label><input class="fi" id="f1" placeholder="T.d. Content, Auglýsingar..."></div>'
+    + '<div class="fg"><label class="fl">Notandi</label><select class="fs" id="f2">' + opts + '</select></div>',
+    '<button class="btn-cancel" onclick="closeModal()">Hætta við</button>'
+    + '<button class="btn-primary" onclick="saveObj()">Vista</button>');
+}
+function saveObj() {
+  const n = gv("f1"); if (!n) return;
+  proj().objectives.push({ id: "o" + Date.now(), name: n, userId: document.getElementById("f2").value, open: true, tasks: [] });
+  save(); closeModal(); render();
+}
+
+function mEditObj(oid) {
+  const p = proj(); const obj = p.objectives.find(function(o) { return o.id === oid; });
+  const opts = p.users.map(function(u) { return '<option value="' + u.id + '"' + (u.id === obj.userId ? " selected" : "") + '>' + u.name + '</option>'; }).join("");
+  openModal("Breyta objective",
+    '<div class="fg"><label class="fl">Heiti</label><input class="fi" id="f1" value="' + obj.name + '"></div>'
+    + '<div class="fg"><label class="fl">Notandi</label><select class="fs" id="f2">' + opts + '</select></div>',
+    '<button class="btn-del" onclick="delObj(\'' + oid + '\')">Eyða</button>'
+    + '<button class="btn-cancel" onclick="closeModal()">Hætta við</button>'
+    + '<button class="btn-primary" onclick="updObj(\'' + oid + '\')">Vista</button>');
+}
+function updObj(oid) {
+  const obj = proj().objectives.find(function(o) { return o.id === oid; });
+  obj.name = gv("f1") || obj.name;
+  obj.userId = document.getElementById("f2").value;
+  save(); closeModal(); render();
+}
+function delObj(oid) {
+  const p = proj(); p.objectives = p.objectives.filter(function(o) { return o.id !== oid; });
+  save(); closeModal(); render();
+}
+
+function mAddTask(oid) {
+  openModal("Nýr verkþáttur",
+    '<div class="fg"><label class="fl">Heiti</label><input class="fi" id="f1" placeholder="Hvað þarf að gera?"></div>'
+    + '<div class="fr">'
+    + '<div class="fg"><label class="fl">Forgangur</label><select class="fs" id="f2"><option value="high">Hár</option><option value="mid" selected>Miðlungs</option><option value="low">Lágur</option></select></div>'
+    + '<div class="fg"><label class="fl">Skiladagur</label><input class="fi" id="f3" type="date"></div>'
+    + '</div>'
+    + '<div class="fg"><label class="fl">Staða</label><select class="fs" id="f4"><option value="todo">Bið</option><option value="progress">Í vinnslu</option><option value="done">Klárt</option></select></div>',
+    '<button class="btn-cancel" onclick="closeModal()">Hætta við</button>'
+    + '<button class="btn-primary" onclick="saveTask(\'' + oid + '\')">Vista</button>');
+}
+function saveTask(oid) {
+  const n = gv("f1"); if (!n) return;
+  const obj = proj().objectives.find(function(o) { return o.id === oid; });
+  obj.tasks.push({ id: "t" + Date.now(), name: n, priority: document.getElementById("f2").value, due: document.getElementById("f3").value, status: document.getElementById("f4").value });
+  save(); closeModal(); renderCT();
+}
+
+let _curOid = null, _curTid = null;
+
+function mEditTask(oid, tid) {
+  _curOid = oid; _curTid = tid;
+  const obj = proj().objectives.find(function(o) { return o.id === oid; });
+  const t = obj.tasks.find(function(t) { return t.id === tid; });
+  if (!t.todos) t.todos = [];
+  if (!t.files) t.files = [];
+
+  document.querySelector(".modal").classList.add("modal-lg");
+
+  // Build body using DOM to avoid all quote issues
+  const wrap = document.createElement("div");
+
+  // Tabs
+  const tabs = document.createElement("div");
+  tabs.className = "modal-tabs";
+  ["Upplýsingar","To-do listi","Skrár"].forEach(function(lbl, i) {
+    const tab = document.createElement("div");
+    tab.className = "modal-tab" + (i===0?" active":"");
+    tab.textContent = lbl;
+    tab.onclick = function() { switchTab(i); };
+    tabs.appendChild(tab);
+  });
+  wrap.appendChild(tabs);
+
+  // Panels container
+  const panels = document.createElement("div");
+  panels.className = "modal-tab-panels";
+
+  // Panel 0: info
+  const p0 = document.createElement("div");
+  p0.className = "modal-panel active";
+  p0.id = "tp0";
+  p0.innerHTML =
+    '<div class="fg"><label class="fl">Heiti</label><input class="fi" id="f1"></div>'
+    + '<div class="fg"><label class="fl">Lýsing</label><textarea class="ft" id="f-desc" placeholder="Nánari lýsing..."></textarea></div>'
+    + '<div class="fr">'
+    + '<div class="fg"><label class="fl">Forgangur</label><select class="fs" id="f2">'
+    + '<option value="high">Hár</option><option value="mid">Miðlungs</option><option value="low">Lágur</option>'
+    + '</select></div>'
+    + '<div class="fg"><label class="fl">Skiladagur</label><input class="fi" id="f3" type="date"></div>'
+    + '</div>'
+    + '<div class="fg"><label class="fl">Staða</label><select class="fs" id="f4">'
+    + '<option value="todo">Bið</option><option value="progress">Í vinnslu</option><option value="done">Klárt</option>'
+    + '</select></div>';
+  panels.appendChild(p0);
+
+  // Set values after insert
+  // Panel 1: todos
+  const p1 = document.createElement("div");
+  p1.className = "modal-panel";
+  p1.id = "tp1";
+  const todoList = document.createElement("div");
+  todoList.className = "todo-list";
+  todoList.id = "todo-list";
+  p1.appendChild(todoList);
+  const todoAdd = document.createElement("div");
+  todoAdd.className = "todo-add";
+  const todoInp = document.createElement("input");
+  todoInp.className = "fi";
+  todoInp.id = "todo-input";
+  todoInp.placeholder = "Bæta við lið...";
+  todoInp.addEventListener("keydown", function(e) { if (e.key === "Enter") addTodoItem(); });
+  const todoBtn = document.createElement("button");
+  todoBtn.className = "btn-primary";
+  todoBtn.textContent = "+";
+  todoBtn.onclick = addTodoItem;
+  todoAdd.appendChild(todoInp);
+  todoAdd.appendChild(todoBtn);
+  p1.appendChild(todoAdd);
+  panels.appendChild(p1);
+
+  // Panel 2: files
+  const p2 = document.createElement("div");
+  p2.className = "modal-panel";
+  p2.id = "tp2";
+  const fileInp = document.createElement("input");
+  fileInp.type = "file";
+  fileInp.id = "task-file-input";
+  fileInp.multiple = true;
+  fileInp.addEventListener("change", handleTaskFiles);
+  const fileUpBtn = document.createElement("div");
+  fileUpBtn.className = "file-upload-btn";
+  fileUpBtn.textContent = "Smelltu til að hlaða upp skrá";
+  fileUpBtn.onclick = function() { document.getElementById("task-file-input").click(); };
+  const fileList = document.createElement("div");
+  fileList.className = "files-list";
+  fileList.id = "files-list";
+  p2.appendChild(fileInp);
+  p2.appendChild(fileUpBtn);
+  p2.appendChild(fileList);
+  panels.appendChild(p2);
+
+  wrap.appendChild(panels);
+
+  openModal(t.name, "", '<button class="btn-del" onclick="delTask()">Eyða</button><button class="btn-cancel" onclick="closeModal()">Hætta við</button><button class="btn-primary" onclick="updTask()">Vista</button>');
+  document.getElementById("m-body").innerHTML = "";
+  document.getElementById("m-body").appendChild(wrap);
+
+  // Set field values
+  document.getElementById("f1").value = t.name;
+  document.getElementById("f-desc").value = t.desc || "";
+  document.getElementById("f2").value = t.priority;
+  document.getElementById("f3").value = t.due || "";
+  document.getElementById("f4").value = t.status;
+
+  // Render todos and files
+  document.getElementById("todo-list").innerHTML = renderTodoItems(t.todos);
+  document.getElementById("files-list").innerHTML = renderFileItems(t.files);
+}
+function switchTab(idx) {
+  document.querySelectorAll(".modal-tab").forEach(function(t,i) { t.classList.toggle("active", i===idx); });
+  document.querySelectorAll(".modal-panel").forEach(function(p,i) { p.classList.toggle("active", i===idx); });
+}
+
+function renderTodoItems(todos) {
+  if (!todos || !todos.length) return '<div style="font-size:13px;color:var(--muted);padding:8px 0">Engir liðir enn</div>';
+  return todos.map(function(item, i) {
+    return '<div class="todo-item">'
+      + '<div class="todo-check' + (item.done ? " checked" : "") + '" onclick="toggleTodo(' + i + ')"></div>'
+      + '<span class="todo-text" style="' + (item.done ? "text-decoration:line-through;color:var(--muted)" : "") + '">' + item.text + '</span>'
+      + '<button class="todo-del" onclick="deleteTodo(' + i + ')">×</button>'
+      + '</div>';
+  }).join("");
+}
+
+function renderFileItems(files) {
+  if (!files || !files.length) return '<div style="font-size:13px;color:var(--muted);padding:8px 0">Engar skrár enn</div>';
+  return files.map(function(f, i) {
+    const ext = f.name.split(".").pop().toLowerCase();
+    const icon = ["pdf"].includes(ext) ? "📄" : ["jpg","jpeg","png","gif","webp"].includes(ext) ? "🖼" : ["doc","docx"].includes(ext) ? "📝" : ["xls","xlsx"].includes(ext) ? "📊" : "📎";
+    return '<div class="file-item">'
+      + '<span class="file-icon">' + icon + '</span>'
+      + '<span class="file-name">' + f.name + '</span>'
+      + '<span class="file-size">' + fmtSize(f.size) + '</span>'
+      + '<button class="file-del" onclick="deleteFile(' + i + ')">×</button>'
+      + '</div>';
+  }).join("");
+}
+
+function fmtSize(bytes) {
+  if (!bytes) return "";
+  if (bytes < 1024) return bytes + " B";
+  if (bytes < 1024*1024) return Math.round(bytes/1024) + " KB";
+  return (bytes/(1024*1024)).toFixed(1) + " MB";
+}
+
+function getTask() {
+  const obj = proj().objectives.find(function(o) { return o.id === _curOid; });
+  return obj.tasks.find(function(t) { return t.id === _curTid; });
+}
+
+function addTodoItem() {
+  const input = document.getElementById("todo-input");
+  const text = input.value.trim();
+  if (!text) return;
+  const t = getTask();
+  if (!t.todos) t.todos = [];
+  t.todos.push({ text: text, done: false });
+  input.value = "";
+  save();
+  document.getElementById("todo-list").innerHTML = renderTodoItems(t.todos);
+}
+
+function toggleTodo(idx) {
+  const t = getTask();
+  t.todos[idx].done = !t.todos[idx].done;
+  save();
+  document.getElementById("todo-list").innerHTML = renderTodoItems(t.todos);
+}
+
+function deleteTodo(idx) {
+  const t = getTask();
+  t.todos.splice(idx, 1);
+  save();
+  document.getElementById("todo-list").innerHTML = renderTodoItems(t.todos);
+}
+
+function handleTaskFiles(event) {
+  const t = getTask();
+  if (!t.files) t.files = [];
+  Array.from(event.target.files).forEach(function(file) {
+    // Store name and size only (not content — keeps localStorage light)
+    t.files.push({ name: file.name, size: file.size });
+  });
+  save();
+  document.getElementById("files-list").innerHTML = renderFileItems(t.files);
+  document.getElementById("task-file-input").value = "";
+}
+
+function deleteFile(idx) {
+  const t = getTask();
+  t.files.splice(idx, 1);
+  save();
+  document.getElementById("files-list").innerHTML = renderFileItems(t.files);
+}
+
+function updTask() {
+  const t = getTask();
+  t.name = gv("f1") || t.name;
+  t.desc = document.getElementById("f-desc").value;
+  t.priority = document.getElementById("f2").value;
+  t.due = document.getElementById("f3").value;
+  t.status = document.getElementById("f4").value;
+  save();
+  document.querySelector(".modal").classList.remove("modal-lg");
+  closeModal(); renderCT();
+}
+
+function delTask(oid, tid) {
+  // called from task row (oid+tid) or from modal (no args, uses _curOid/_curTid)
+  const o = oid || _curOid; const ti = tid || _curTid;
+  const obj = proj().objectives.find(function(x) { return x.id === o; });
+  obj.tasks = obj.tasks.filter(function(t) { return t.id !== ti; });
+  save();
+  document.querySelector(".modal").classList.remove("modal-lg");
+  closeModal(); renderCT();
+}
+
+function handleTodoKey(e) { if (e.key === "Enter") addTodoItem(); }
+function render() { renderSB(); renderBC(); renderCT(); }
+load(); render();
+</script>
+</body>
+</html>

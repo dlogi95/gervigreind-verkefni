@@ -42,7 +42,7 @@ header{background:var(--dark);padding:0 1.5rem;display:flex;align-items:center;h
 .cover-acts{position:absolute;bottom:10px;right:10px;display:flex;gap:6px;align-items:center;z-index:2}
 .cbtn{background:rgba(255,255,255,.93);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:11px;font-family:"DM Sans",sans-serif;cursor:pointer;font-weight:500}
 .cbtn:hover{background:#fff}.cbtn.red{color:var(--red);border-color:var(--red-mid)}
-.cwrap{display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.93);border:1px solid var(--border);border-radius:6px;padding:3px 8px}
+.cwrap{display:flex;align-items:center;background:rgba(255,255,255,.93);border:1px solid var(--border);border-radius:6px;padding:3px 6px}
 .cwrap input[type=color]{width:18px;height:18px;border:none;padding:0;background:none;cursor:pointer;border-radius:3px}
 .cwrap input[type=text]{width:64px;border:none;font-size:11px;font-family:"DM Mono",monospace;background:none;outline:none;color:var(--text)}
 /* project */
@@ -279,8 +279,27 @@ var state = {pid:1, uid:null};
 var curOid = null, curTid = null;
 var schedView = "week", schedOff = 0;
 
-function load(){try{var s=localStorage.getItem(KEY);if(s)db=JSON.parse(s);}catch(e){}}
-function save(){localStorage.setItem(KEY,JSON.stringify(db));}
+function load(){
+  try {
+    var s=localStorage.getItem(KEY);
+    if(s) {
+      db=JSON.parse(s);
+      console.log('Gögn hlaðin:', db.projects.length, 'verkefni');
+    } else {
+      console.log('Engin vistuð gögn, nota default');
+    }
+  } catch(e) {
+    console.error('Villa við að hlaða gögnum:', e);
+  }
+}
+function save(){
+  try {
+    localStorage.setItem(KEY,JSON.stringify(db));
+  } catch(e) {
+    console.error('localStorage villa:', e);
+    alert('Gögn vistuðust ekki: ' + e.message);
+  }
+}
 function proj(){return db.projects.find(function(p){return p.id===state.pid;});}
 function usr(){return state.uid?proj().users.find(function(u){return u.id===state.uid;}):null;}
 function ini(n){return n.split(" ").map(function(w){return w[0];}).join("").slice(0,2).toUpperCase();}
@@ -325,11 +344,10 @@ function buildCover(){
   var acts=el("div","cover-acts");
 
   var cw=el("div","cwrap");
+  cw.title="Velja lit á bakgrunn";
   var ci=document.createElement("input");ci.type="color";ci.value=col||"#1a1a2e";
-  var ct2=document.createElement("input");ct2.type="text";ct2.value=col||"#1a1a2e";ct2.maxLength=7;ct2.placeholder="#000000";
   ci.addEventListener("input",function(){setCoverCol(ci.value);});
-  ct2.addEventListener("input",function(){if(/^#[0-9a-fA-F]{6}$/.test(ct2.value))setCoverCol(ct2.value);});
-  cw.appendChild(ci);cw.appendChild(ct2);
+  cw.appendChild(ci);
   cw.addEventListener("click",function(e){e.stopPropagation();});
   acts.appendChild(cw);
 

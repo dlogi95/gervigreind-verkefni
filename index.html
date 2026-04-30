@@ -216,6 +216,10 @@ header{background:var(--dark);padding:0 1.5rem;display:flex;align-items:center;h
 @media (min-width: 769px) {
   .hamburger { display: none; }
 }
+
+.back-btn{display:none;align-items:center;gap:6px;background:none;border:none;color:var(--red);font-size:14px;font-family:"DM Sans",sans-serif;font-weight:500;cursor:pointer;padding:0;margin-bottom:1rem}
+.back-btn:hover{opacity:.75}
+@media(max-width:768px){.back-btn{display:flex}}
 </style>
 </head>
 <body>
@@ -441,6 +445,12 @@ function renderCT(){
 
   // cover
   ct.appendChild(buildCover());
+
+  // back button (mobile only)
+  var backBtn=el("button","back-btn","← Til baka");
+  backBtn.style.display = u ? "" : "none";
+  backBtn.addEventListener("click",function(){selU(null);});
+  ct.appendChild(backBtn);
 
   // header
   var ph=el("div","ph");
